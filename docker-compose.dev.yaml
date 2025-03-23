@@ -1,0 +1,80 @@
+name: donation-server-dev
+services:
+  db:
+    image: postgres:13.18-alpine
+    env_file: .env
+    container_name: pg02-dev
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_SSL=${DB_SSL}
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -d ${DB_NAME} -U ${DB_USER} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3  
+      start_period: 20s
+
+  migrator:
+    image: migrate/migrate
+    container_name: mg02-dev
+    volumes:
+      - ./migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", 
+      "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSL}",
+      "up"
+    ]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - default 
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    env_file: .env
+    container_name: go02-dev
+    volumes:
+      - .:/app 
+    restart: unless-stopped
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - default
+    ports:
+      - "8000:8000"
+  
+  db_ui:
+    image: sosedoff/pgweb:0.13.1
+    container_name: pw02-dev
+    environment:
+      - PGWEB_DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=${DB_SSL}
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    networks:
+      - default
+    restart: unless-stopped
+
+volumes:
+  local_postgres_data: {}
+
+networks:
+  default:
+    driver: bridge 
