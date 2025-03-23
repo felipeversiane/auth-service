@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/exaring/otelpgx"
 	"github.com/felipeversiane/auth-service/internal/infra/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -47,6 +48,7 @@ func New(config config.DatabaseConfig) (DatabaseInterface, error) {
 
 		poolConfig.MaxConns = maxConns
 		poolConfig.MinConns = minConns
+		poolConfig.ConnConfig.Tracer = otelpgx.NewTracer()
 
 		slog.Info("creating database connection pool...")
 

@@ -13,15 +13,17 @@ var (
 )
 
 type config struct {
-	Database DatabaseConfig
-	Server   ServerConfig
-	Log      LogConfig
+	Database  DatabaseConfig
+	Server    ServerConfig
+	Log       LogConfig
+	Telemetry TelemetryConfig
 }
 
 type ConfigInterface interface {
 	GetDatabaseConfig() DatabaseConfig
 	GetServerConfig() ServerConfig
 	GetLogConfig() LogConfig
+	GetTelemetryConfig() TelemetryConfig
 }
 
 type DatabaseConfig struct {
@@ -39,6 +41,13 @@ type ServerConfig struct {
 
 type LogConfig struct {
 	Level string
+}
+
+type TelemetryConfig struct {
+	ServiceName              string
+	ServiceVersion           string
+	OtelExporterOtlpEndpoint string
+	OtelExporterOtlpInsecure bool
 }
 
 func New() ConfigInterface {
@@ -63,6 +72,12 @@ func New() ConfigInterface {
 			Log: LogConfig{
 				Level: getEnv("LOG_LEVEL", "INFO"),
 			},
+			Telemetry: TelemetryConfig{
+				ServiceName:              getEnv("OTEL_SERVICE_NAME", "auth-service"),
+				ServiceVersion:           getEnv("OTEL_SERVICE_VERSION", "0.0.1"),
+				OtelExporterOtlpEndpoint: getEnv("OTEL_EXPORTER_ENDPOINT", "http://collector:4317"),
+				OtelExporterOtlpInsecure: true,
+			},
 		}
 	})
 
@@ -79,6 +94,10 @@ func (c *config) GetServerConfig() ServerConfig {
 
 func (c *config) GetLogConfig() LogConfig {
 	return c.Log
+}
+
+func (c *config) GetTelemetryConfig() TelemetryConfig {
+	return c.Telemetry
 }
 
 func getEnv(key, defaultValue string) string {

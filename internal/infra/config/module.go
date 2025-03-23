@@ -14,5 +14,8 @@ var Module = fx.Options(
 		func(cfg ConfigInterface) LogConfig {
 			return cfg.GetLogConfig()
 		},
+		func(cfg ConfigInterface) TelemetryConfig {
+			return cfg.GetTelemetryConfig()
+		},
 	),
 )
