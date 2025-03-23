@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/exaring/otelpgx"
 	"github.com/felipeversiane/auth-service/internal/infra/config"
@@ -14,11 +15,6 @@ import (
 var (
 	once     sync.Once
 	instance *database
-)
-
-const (
-	maxConns = 20
-	minConns = 2
 )
 
 type database struct {
@@ -46,8 +42,9 @@ func New(config config.DatabaseConfig) (DatabaseInterface, error) {
 			return
 		}
 
-		poolConfig.MaxConns = maxConns
-		poolConfig.MinConns = minConns
+		poolConfig.MaxConns = int32(config.MaxConnections)
+		poolConfig.MinConns = int32(config.MinConnections)
+		poolConfig.MaxConnLifetime = time.Duration(config.ConnMaxLifetime) * time.Second
 		poolConfig.ConnConfig.Tracer = otelpgx.NewTracer()
 
 		slog.Info("creating database connection pool...")

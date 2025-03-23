@@ -12,12 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	readTimeout  = 15 * time.Second
-	writeTimeout = 15 * time.Second
-	idleTimeout  = 60 * time.Second
-)
-
 type server struct {
 	router *gin.Engine
 	srv    *http.Server
@@ -44,9 +38,9 @@ func New(config config.ServerConfig, db database.DatabaseInterface) ServerInterf
 		srv: &http.Server{
 			Addr:         ":" + config.Port,
 			Handler:      router,
-			ReadTimeout:  readTimeout,
-			WriteTimeout: writeTimeout,
-			IdleTimeout:  idleTimeout,
+			ReadTimeout:  time.Duration(config.ReadTimeout) * time.Second,
+			WriteTimeout: time.Duration(config.WriteTimeout) * time.Second,
+			IdleTimeout:  time.Duration(config.IdleTimeout) * time.Second,
 		},
 		config: config,
 		db:     db,

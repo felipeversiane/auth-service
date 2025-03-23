@@ -3,6 +3,7 @@ package config
 import (
 	"log/slog"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/joho/godotenv"
@@ -27,16 +28,22 @@ type ConfigInterface interface {
 }
 
 type DatabaseConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	Name     string
-	SslMode  string
+	Host            string
+	Port            string
+	User            string
+	Password        string
+	Name            string
+	SslMode         string
+	MaxConnections  int
+	MinConnections  int
+	ConnMaxLifetime int
 }
 
 type ServerConfig struct {
-	Port string
+	Port         string
+	ReadTimeout  int
+	WriteTimeout int
+	IdleTimeout  int
 }
 
 type LogConfig struct {
@@ -59,15 +66,21 @@ func New() ConfigInterface {
 
 		cfg = &config{
 			Database: DatabaseConfig{
-				Host:     getEnv("DB_HOST", "localhost"),
-				Port:     getEnv("DB_PORT", "5432"),
-				User:     getEnv("DB_USER", "user"),
-				Password: getEnv("DB_PASSWORD", ""),
-				Name:     getEnv("DB_NAME", "db"),
-				SslMode:  getEnv("DB_SSL", "disable"),
+				Host:            getEnv("DB_HOST", "localhost"),
+				Port:            getEnv("DB_PORT", "5432"),
+				User:            getEnv("DB_USER", "user"),
+				Password:        getEnv("DB_PASSWORD", ""),
+				Name:            getEnv("DB_NAME", "db"),
+				SslMode:         getEnv("DB_SSL", "disable"),
+				MaxConnections:  getEnvInt("DB_MAX_CONNECTIONS", 20),
+				MinConnections:  getEnvInt("DB_MIN_CONNECTIONS", 1),
+				ConnMaxLifetime: getEnvInt("DB_CONN_MAX_LIFETIME", 300),
 			},
 			Server: ServerConfig{
-				Port: getEnv("SERVER_PORT", "8000"),
+				Port:         getEnv("SERVER_PORT", "8000"),
+				ReadTimeout:  getEnvInt("SERVER_READ_TIMEOUT", 15),
+				WriteTimeout: getEnvInt("SERVER_WRITE_TIMEOUT", 15),
+				IdleTimeout:  getEnvInt("SERVER_IDLE_TIMEOUT", 60),
 			},
 			Log: LogConfig{
 				Level: getEnv("LOG_LEVEL", "INFO"),
@@ -109,4 +122,17 @@ func getEnv(key, defaultValue string) string {
 		slog.Error("missing required environment variable", "key", key)
 	}
 	return value
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	parsedValue, err := strconv.Atoi(value)
+	if err != nil {
+		slog.Error("invalid value for int environment variable", "key", key, "value", value)
+		return defaultValue
+	}
+	return parsedValue
 }
