@@ -1,0 +1,29 @@
+# env files
+.env
+*.env
+*/*.env
+*/*/*.env
+
+# binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# test binary, built with `go test -c`
+*.test
+
+# output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# dependency directories (remove the comment below to include it)
+# vendor/
+
+# go workspace file
+go.work
+
+tmp
+
+#data
+data
