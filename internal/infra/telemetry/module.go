@@ -9,11 +9,11 @@ import (
 
 var Module = fx.Options(
 	fx.Provide(
-		func(config config.TelemetryConfig) (TelemetryProviderInterface, error) {
+		func(config config.TelemetryConfig) (TelemetryInterface, error) {
 			return New(config)
 		},
 	),
-	fx.Invoke(func(lc fx.Lifecycle, observer TelemetryProviderInterface) {
+	fx.Invoke(func(lc fx.Lifecycle, observer TelemetryInterface) {
 		lc.Append(fx.Hook{
 			OnStop: func(ctx context.Context) error {
 				return observer.Shutdown(ctx)
