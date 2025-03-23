@@ -1,7 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"github.com/felipeversiane/auth-service/internal/infra/config"
+	"github.com/felipeversiane/auth-service/internal/infra/database"
+	"go.uber.org/fx"
+)
 
 func main() {
-	fmt.Sprintln("Hello world")
+	app := fx.New(
+		config.Module,
+		database.Module,
+		fx.NopLogger,
+	)
+
+	app.Run()
 }
