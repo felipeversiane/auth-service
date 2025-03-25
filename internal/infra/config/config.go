@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log/slog"
 	"os"
 	"strconv"
 	"sync"
@@ -44,10 +43,14 @@ type ServerConfig struct {
 	ReadTimeout  int
 	WriteTimeout int
 	IdleTimeout  int
+	Environment  string
 }
 
 type LogConfig struct {
-	Level string
+	Level       string
+	Path        string
+	ServiceName string
+	Environment string
 }
 
 type TelemetryConfig struct {
@@ -60,9 +63,7 @@ type TelemetryConfig struct {
 func New() ConfigInterface {
 	var cfg *config
 	once.Do(func() {
-		if err := godotenv.Load(); err != nil {
-			slog.Warn("no .env file found")
-		}
+		_ = godotenv.Load()
 
 		cfg = &config{
 			Database: DatabaseConfig{
@@ -81,12 +82,16 @@ func New() ConfigInterface {
 				ReadTimeout:  getEnvInt("SERVER_READ_TIMEOUT", 15),
 				WriteTimeout: getEnvInt("SERVER_WRITE_TIMEOUT", 15),
 				IdleTimeout:  getEnvInt("SERVER_IDLE_TIMEOUT", 60),
+				Environment:  getEnv("ENVIRONMENT", "development"),
 			},
 			Log: LogConfig{
-				Level: getEnv("LOG_LEVEL", "INFO"),
+				Level:       getEnv("LOG_LEVEL", "INFO"),
+				Path:        getEnv("LOG_PATH", "./logs/app.log"),
+				ServiceName: getEnv("SERVICE_NAME", "auth-service"),
+				Environment: getEnv("ENVIRONMENT", "development"),
 			},
 			Telemetry: TelemetryConfig{
-				ServiceName:              getEnv("OTEL_SERVICE_NAME", "auth-service"),
+				ServiceName:              getEnv("SERVICE_NAME", "auth-service"),
 				ServiceVersion:           getEnv("OTEL_SERVICE_VERSION", "0.0.1"),
 				OtelExporterOtlpEndpoint: getEnv("OTEL_EXPORTER_ENDPOINT", "http://collector:4317"),
 				OtelExporterOtlpInsecure: true,
@@ -119,7 +124,6 @@ func getEnv(key, defaultValue string) string {
 		if defaultValue != "" {
 			return defaultValue
 		}
-		slog.Error("missing required environment variable", "key", key)
 	}
 	return value
 }
@@ -131,7 +135,6 @@ func getEnvInt(key string, defaultValue int) int {
 	}
 	parsedValue, err := strconv.Atoi(value)
 	if err != nil {
-		slog.Error("invalid value for int environment variable", "key", key, "value", value)
 		return defaultValue
 	}
 	return parsedValue

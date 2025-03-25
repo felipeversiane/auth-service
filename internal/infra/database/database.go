@@ -3,13 +3,14 @@ package database
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/exaring/otelpgx"
 	"github.com/felipeversiane/auth-service/internal/infra/config"
+	"github.com/felipeversiane/auth-service/internal/infra/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 )
 
 var (
@@ -31,14 +32,14 @@ type DatabaseInterface interface {
 func New(config config.DatabaseConfig) (DatabaseInterface, error) {
 	var err error
 	once.Do(func() {
-		slog.Info("initializing database connection...")
+		logger.Info("Initializing database connection...")
 
 		dsn := getConnectionString(config)
 
 		poolConfig, parseErr := pgxpool.ParseConfig(dsn)
 		if parseErr != nil {
 			err = fmt.Errorf("failed to parse pool config: %w", parseErr)
-			slog.Error("error parsing pool config", "error", err)
+			logger.Error("Error parsing pool config", zap.Error(err))
 			return
 		}
 
@@ -47,12 +48,12 @@ func New(config config.DatabaseConfig) (DatabaseInterface, error) {
 		poolConfig.MaxConnLifetime = time.Duration(config.ConnMaxLifetime) * time.Second
 		poolConfig.ConnConfig.Tracer = otelpgx.NewTracer()
 
-		slog.Info("creating database connection pool...")
+		logger.Info("Creating database connection pool...")
 
 		pool, connErr := pgxpool.NewWithConfig(context.Background(), poolConfig)
 		if connErr != nil {
 			err = fmt.Errorf("failed to create connection pool: %w", connErr)
-			slog.Error("error creating connection pool", "error", err)
+			logger.Error("Error creating connection pool", zap.Error(err))
 			return
 		}
 
@@ -61,14 +62,14 @@ func New(config config.DatabaseConfig) (DatabaseInterface, error) {
 			config: config,
 		}
 
-		slog.Info("attempting to ping database...")
+		logger.Info("Attempting to ping database...")
 
 		if err := instance.Ping(context.Background()); err != nil {
 			instance.Close()
 			err = fmt.Errorf("failed to connect to database: %w", err)
-			slog.Error("error connecting to database", "error", err)
+			logger.Error("Error connecting to database", zap.Error(err))
 		} else {
-			slog.Info("database connection established successfully")
+			logger.Info("Database connection established successfully")
 		}
 	})
 
@@ -82,7 +83,7 @@ func New(config config.DatabaseConfig) (DatabaseInterface, error) {
 func (d *database) Ping(ctx context.Context) error {
 	err := d.db.Ping(ctx)
 	if err != nil {
-		slog.Warn("database ping failed", "error", err)
+		logger.Warn("Database ping failed", zap.Error(err))
 	}
 	return err
 }
@@ -90,7 +91,7 @@ func (d *database) Ping(ctx context.Context) error {
 func (d *database) Close() {
 	if d.db != nil {
 		d.db.Close()
-		slog.Info("database connection closed")
+		logger.Info("Database connection closed")
 	}
 }
 

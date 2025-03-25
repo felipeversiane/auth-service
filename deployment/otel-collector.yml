@@ -7,17 +7,10 @@ receivers:
 exporters:
   prometheus:
     endpoint: "0.0.0.0:9464"
-
-  logging:
-    verbosity: detailed
-
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
-    labels:
-      service: "auth-service"
-
   jaeger:
-    endpoint: jaeger:14250
+    endpoint: "http://jaeger:14250"
     tls:
       insecure: true
 
@@ -25,12 +18,12 @@ service:
   pipelines:
     metrics:
       receivers: [otlp]
-      exporters: [prometheus, logging]
+      exporters: [prometheus]
 
     traces:
       receivers: [otlp]
-      exporters: [jaeger, logging]
+      exporters: [jaeger]
     
     logs:
       receivers: [otlp]
-      exporters: [loki, logging]
+      exporters: [loki]

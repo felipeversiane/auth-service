@@ -1,44 +1,84 @@
-name: auth-service-otel
+# Observability example
+
+name: auth-service-otel 
 
 services:
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    command: ["--config=/etc/otel-collector-config.yml"]
+    image: otel/opentelemetry-collector-contrib:0.53.0
+    container_name: auth-service-otel-collector-dev
     volumes:
-      - ./otel-collector.yml:/etc/otel-collector-config.yml
+      - ./deployment/otel-collector.yml:/etc/otel-collector.yml
+    command:
+      - "--config=/etc/otel-collector.yml"
+    networks:
+      - default
     ports:
-      - "4317:4317"   
-      - "4318:4318"   
-      - "9464:9464"   
-
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    environment:
-      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
-      - COLLECTOR_OTLP_ENABLED=true
-    ports:
-      - "14250:14250" 
-      - "14268:14268"
-      - "14269:14269"
+      - "1888:1888"
       - "4317:4317"
-      - "4318:4318"
+      - "13133:13133"
+      - "55680:55680"
+      - "9464:9464"
+    restart: unless-stopped
+    depends_on:
+      - jaeger
 
-  prometheus:
-    image: prom/prometheus
+  promtail:
+    image: grafana/promtail:2.8.0
+    container_name: auth-service-promtail-dev
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
+      - ./deployment/promtail.yml:/etc/promtail/promtail.yml
+      - ./logs:/app/logs
+    command:
+      - -config.file=/etc/promtail/promtail.yml
+    depends_on:
+      - server
+    networks:
+      - default
+    restart: unless-stopped
 
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:2.8.0
+    container_name: auth-service-loki-dev
     ports:
       - "3100:3100"
+    networks:
+      - default
+    restart: unless-stopped
 
-  grafana:
-    image: grafana/grafana
-    depends_on:
-      - prometheus
-      - loki
+  jaeger:
+    image: jaegertracing/all-in-one:1.32
+    container_name: auth-service-jaeger-dev
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
     ports:
-      - "3000:3000"
+      - "5775:5775"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14250:14250"
+      - "14267:14267"
+      - "14268:14268"
+      - "9411:9411"
+    networks:
+      - default
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.36.0
+    container_name: auth-service-prometheus-dev
+    volumes:
+      - ./deployment/prometheus.yml:/etc/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - default
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  prometheus_data: {}

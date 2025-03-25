@@ -3,13 +3,14 @@ package server
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/felipeversiane/auth-service/internal/infra/config"
 	"github.com/felipeversiane/auth-service/internal/infra/database"
+	"github.com/felipeversiane/auth-service/internal/infra/logger"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type server struct {
@@ -26,7 +27,11 @@ type ServerInterface interface {
 }
 
 func New(config config.ServerConfig, db database.DatabaseInterface) ServerInterface {
-	gin.SetMode(gin.ReleaseMode)
+	if config.Environment == "development" {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -62,7 +67,7 @@ func (s *server) InitRoutes() {
 }
 
 func (s *server) Start() error {
-	slog.Info("starting http server", "port", s.config.Port)
+	logger.Info("Starting HTTP server", zap.String("port", s.config.Port))
 
 	if err := s.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("failed to start server: %w", err)
@@ -72,7 +77,7 @@ func (s *server) Start() error {
 }
 
 func (s *server) Shutdown(ctx context.Context) error {
-	slog.Info("initiating graceful shutdown")
+	logger.Info("Initiating graceful shutdown")
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -81,7 +86,7 @@ func (s *server) Shutdown(ctx context.Context) error {
 		return fmt.Errorf("error during server shutdown: %w", err)
 	}
 
-	slog.Info("server shutdown completed successfully")
+	logger.Info("Server shutdown completed successfully")
 	return nil
 }
 
