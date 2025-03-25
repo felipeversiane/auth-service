@@ -43,7 +43,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     env_file: .env
     container_name: auth-service-server-dev
     volumes:
