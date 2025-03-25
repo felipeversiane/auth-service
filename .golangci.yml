@@ -1,6 +1,5 @@
-disable-all: true
-
 linters:
+  disable-all: true
   enable:
     - gofmt
     - goimports
@@ -29,14 +28,14 @@ linters-settings:
     asserts: false
 
 output:
-  format: "tab"
+  format: tab
 
 skip-dirs:
-  - "vendor/"
+  - vendor/
 
 skip-files:
-  - "_easyjson.go"
-  - ".pb.go"
-  - ".svc.go"
+  - _easyjson.go
+  - .pb.go
+  - .svc.go
 
-modules-download-mode: "readonly"
+modules-download-mode: readonly
