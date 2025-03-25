@@ -33,4 +33,4 @@ service:
     
     logs:
       receivers: [otlp]
-      exporters: [loki]
+      exporters: [loki, logging]
