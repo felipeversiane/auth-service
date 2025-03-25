@@ -1,0 +1,41 @@
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - goimports
+    - gocyclo
+    - errcheck
+    - staticcheck
+    - misspell
+    - gosec
+    - funlen
+    - lll
+    - dupl
+
+linters-settings:
+  golint:
+    min-confidence: 0.3
+  gocyclo:
+    min-complexity: 20
+  dupl:
+    threshold: 200
+  lll:
+    line-length: 120
+  funlen:
+    statements: 100
+    lines: 100
+  errcheck:
+    asserts: false
+
+output:
+  format: tab
+
+skip-dirs:
+  - vendor/
+
+skip-files:
+  - "_easyjson.go"
+  - ".pb.go"
+  - ".svc.go"
+
+modules-download-mode: readonly
