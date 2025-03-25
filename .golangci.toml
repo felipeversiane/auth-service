@@ -1,53 +1,30 @@
-linters = { 
-  disable-all = true
-  enable = [
-    "gofmt",
-    "goimports",
-    "gocyclo",
-    "errcheck",
-    "staticcheck",
-    "misspell",
-    "gosec",
-    "funlen",
-    "lll",
-    "dupl"
-  ]
-}
+disable-all = true
 
-linters-settings = {
-  golint = { 
+[linters]
+  enable = ["gofmt", "goimports", "gocyclo", "errcheck", "staticcheck", "misspell", "gosec", "funlen", "lll", "dupl"]
+
+[linters-settings]
+  [linters-settings.golint]
     min-confidence = 0.3
-  }
-  gocyclo = { 
+  [linters-settings.gocyclo]
     min-complexity = 20
-  }
-  dupl = { 
+  [linters-settings.dupl]
     threshold = 200
-  }
-  lll = { 
+  [linters-settings.lll]
     line-length = 120
-  }
-  funlen = { 
+  [linters-settings.funlen]
     statements = 100
     lines = 100
-  }
-  errcheck = { 
+  [linters-settings.errcheck]
     asserts = false
-  }
-}
 
-output = {
+[output]
   format = "tab"
-}
 
-skip-dirs = [
-  "vendor/"
-]
+[skip-dirs]
+  ["vendor/"]
 
-skip-files = [
-  "_easyjson.go",
-  ".pb.go",
-  ".svc.go"
-]
+[skip-files]
+  ["_easyjson.go", ".pb.go", ".svc.go"]
 
 modules-download-mode = "readonly"
