@@ -1,9 +1,10 @@
-name: donation-server-dev
+name: auth-service-dev
+
 services:
   db:
     image: postgres:13.18-alpine
     env_file: .env
-    container_name: pg02-dev
+    container_name: auth-service-db-dev
     volumes:
       - local_postgres_data:/var/lib/postgresql/data
     ports:
@@ -24,7 +25,7 @@ services:
 
   migrator:
     image: migrate/migrate
-    container_name: mg02-dev
+    container_name: auth-service-migrator-dev
     volumes:
       - ./migrations:/migrations
     command: [
@@ -44,7 +45,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     env_file: .env
-    container_name: go02-dev
+    container_name: auth-service-server-dev
     volumes:
       - .:/app 
     restart: unless-stopped
@@ -58,7 +59,7 @@ services:
   
   db_ui:
     image: sosedoff/pgweb:0.13.1
-    container_name: pw02-dev
+    container_name: auth-service-pgadmin-dev
     environment:
       - PGWEB_DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=${DB_SSL}
     env_file:
