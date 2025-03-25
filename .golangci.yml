@@ -3,7 +3,6 @@ version: 2
 linters:
   disable-all: true
   enable:
-    - gofmt
     - goimports
     - gocyclo
     - errcheck
@@ -28,6 +27,9 @@ linters-settings:
     lines: 100
   errcheck:
     asserts: false
+
+format:
+  gofmt: true  
 
 output:
   format: tab
