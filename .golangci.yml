@@ -3,6 +3,7 @@ version: 2
 linters:
   disable-all: true
   enable:
+    - gofmt
     - goimports
     - gocyclo
     - errcheck
@@ -28,11 +29,12 @@ linters-settings:
   errcheck:
     asserts: false
 
-format:
-  gofmt: true  
+formatter:
+  goimports: true
+  gofmt: true
 
 output:
-  format: tab
+  format: "tab"
 
 skip-dirs:
   - vendor/
