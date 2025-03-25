@@ -3,14 +3,13 @@ package server
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/felipeversiane/auth-service/internal/infra/config"
 	"github.com/felipeversiane/auth-service/internal/infra/database"
-	"github.com/felipeversiane/auth-service/internal/infra/logger"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 type server struct {
@@ -67,26 +66,30 @@ func (s *server) InitRoutes() {
 }
 
 func (s *server) Start() error {
-	logger.Info("Starting HTTP server", zap.String("port", s.config.Port))
+	slog.Info("starting HTTP server", slog.String("port", s.config.Port))
 
 	if err := s.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		return fmt.Errorf("failed to start server: %w", err)
+		err = fmt.Errorf("failed to start server: %w", err)
+		slog.Error("server not started", "error", err)
+		return err
 	}
 
 	return nil
 }
 
 func (s *server) Shutdown(ctx context.Context) error {
-	logger.Info("Initiating graceful shutdown")
+	slog.Info("initiating graceful shutdown")
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	if err := s.srv.Shutdown(ctx); err != nil {
-		return fmt.Errorf("error during server shutdown: %w", err)
+		err = fmt.Errorf("error during server shutdown: %w", err)
+		slog.Error("server shutdown unsuccessfully", "error", err)
+		return err
 	}
 
-	logger.Info("Server shutdown completed successfully")
+	slog.Info("server shutdown completed successfully")
 	return nil
 }
 
