@@ -3,6 +3,8 @@ package domain
 import (
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/google/uuid"
 )
 
@@ -26,19 +28,21 @@ type UserInterface interface {
 	GetLastName() string
 	GetCreatedAt() time.Time
 	GetUpdatedAt() time.Time
+	ComparePassword(password string) bool
 }
 
-func New(id uuid.UUID, email, password, phone, firstName, lastName string, createdAt time.Time, updatedAt time.Time) UserInterface {
-	return &user{
-		id:        id,
+func New(email, password, phone, firstName, lastName string) UserInterface {
+	user := &user{
+		id:        uuid.Must(uuid.NewRandom()),
 		email:     email,
-		password:  password,
+		password:  hashPassword(password),
 		phone:     phone,
 		firstName: firstName,
 		lastName:  lastName,
-		createdAt: createdAt,
-		updatedAt: updatedAt,
+		createdAt: time.Now(),
+		updatedAt: time.Now(),
 	}
+	return user
 }
 
 func (u *user) GetID() uuid.UUID {
@@ -71,4 +75,14 @@ func (u *user) GetCreatedAt() time.Time {
 
 func (u *user) GetUpdatedAt() time.Time {
 	return u.updatedAt
+}
+
+func (u *user) ComparePassword(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(u.password), []byte(password))
+	return err == nil
+}
+
+func hashPassword(password string) string {
+	hashed, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(hashed)
 }

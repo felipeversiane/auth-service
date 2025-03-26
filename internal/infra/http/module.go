@@ -1,4 +1,4 @@
-package server
+package http
 
 import (
 	"context"
@@ -10,11 +10,11 @@ import (
 
 var Module = fx.Options(
 	fx.Provide(
-		func(config config.ServerConfig, db database.DatabaseInterface) ServerInterface {
+		func(config config.HttpServerConfig, db database.DatabaseInterface) HttpServerInterface {
 			return New(config, db)
 		},
 	),
-	fx.Invoke(func(lc fx.Lifecycle, server ServerInterface) {
+	fx.Invoke(func(lc fx.Lifecycle, server HttpServerInterface) {
 		lc.Append(fx.Hook{
 			OnStart: func(ctx context.Context) error {
 				go func() {

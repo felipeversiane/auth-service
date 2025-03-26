@@ -13,15 +13,15 @@ var (
 )
 
 type config struct {
-	Database  DatabaseConfig
-	Server    ServerConfig
-	Log       LogConfig
-	Telemetry TelemetryConfig
+	Database   DatabaseConfig
+	HttpServer HttpServerConfig
+	Log        LogConfig
+	Telemetry  TelemetryConfig
 }
 
 type ConfigInterface interface {
 	GetDatabaseConfig() DatabaseConfig
-	GetServerConfig() ServerConfig
+	GetHttpServerConfig() HttpServerConfig
 	GetLogConfig() LogConfig
 	GetTelemetryConfig() TelemetryConfig
 }
@@ -38,7 +38,7 @@ type DatabaseConfig struct {
 	ConnMaxLifetime int
 }
 
-type ServerConfig struct {
+type HttpServerConfig struct {
 	Port         string
 	ReadTimeout  int
 	WriteTimeout int
@@ -77,11 +77,11 @@ func New() ConfigInterface {
 				MinConnections:  getEnvInt("DB_MIN_CONNECTIONS", 1),
 				ConnMaxLifetime: getEnvInt("DB_CONN_MAX_LIFETIME", 300),
 			},
-			Server: ServerConfig{
-				Port:         getEnv("SERVER_PORT", "8000"),
-				ReadTimeout:  getEnvInt("SERVER_READ_TIMEOUT", 15),
-				WriteTimeout: getEnvInt("SERVER_WRITE_TIMEOUT", 15),
-				IdleTimeout:  getEnvInt("SERVER_IDLE_TIMEOUT", 60),
+			HttpServer: HttpServerConfig{
+				Port:         getEnv("HTTP_SERVER_PORT", "8000"),
+				ReadTimeout:  getEnvInt("HTTP_SERVER_READ_TIMEOUT", 15),
+				WriteTimeout: getEnvInt("HTTP_SERVER_WRITE_TIMEOUT", 15),
+				IdleTimeout:  getEnvInt("HTTP_SERVER_IDLE_TIMEOUT", 60),
 				Environment:  getEnv("ENVIRONMENT", "development"),
 			},
 			Log: LogConfig{
@@ -106,8 +106,8 @@ func (c *config) GetDatabaseConfig() DatabaseConfig {
 	return c.Database
 }
 
-func (c *config) GetServerConfig() ServerConfig {
-	return c.Server
+func (c *config) GetHttpServerConfig() HttpServerConfig {
+	return c.HttpServer
 }
 
 func (c *config) GetLogConfig() LogConfig {

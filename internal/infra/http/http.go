@@ -1,4 +1,4 @@
-package server
+package http
 
 import (
 	"context"
@@ -12,20 +12,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type server struct {
+type httpServer struct {
 	router *gin.Engine
 	srv    *http.Server
-	config config.ServerConfig
+	config config.HttpServerConfig
 	db     database.DatabaseInterface
 }
 
-type ServerInterface interface {
+type HttpServerInterface interface {
 	Start() error
 	Shutdown(ctx context.Context) error
 	InitRoutes()
 }
 
-func New(config config.ServerConfig, db database.DatabaseInterface) ServerInterface {
+func New(config config.HttpServerConfig, db database.DatabaseInterface) HttpServerInterface {
 	if config.Environment == "development" {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -37,7 +37,7 @@ func New(config config.ServerConfig, db database.DatabaseInterface) ServerInterf
 	router.Use(gin.Recovery())
 	router.Use(corsMiddleware())
 
-	server := &server{
+	server := &httpServer{
 		router: router,
 		srv: &http.Server{
 			Addr:         ":" + config.Port,
@@ -53,7 +53,7 @@ func New(config config.ServerConfig, db database.DatabaseInterface) ServerInterf
 	return server
 }
 
-func (s *server) InitRoutes() {
+func (s *httpServer) InitRoutes() {
 	v1 := s.router.Group("/api/v1")
 	{
 		v1.GET("/health", func(ctx *gin.Context) {
@@ -65,7 +65,7 @@ func (s *server) InitRoutes() {
 	}
 }
 
-func (s *server) Start() error {
+func (s *httpServer) Start() error {
 	slog.Info("starting HTTP server", slog.String("port", s.config.Port))
 
 	if err := s.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -77,7 +77,7 @@ func (s *server) Start() error {
 	return nil
 }
 
-func (s *server) Shutdown(ctx context.Context) error {
+func (s *httpServer) Shutdown(ctx context.Context) error {
 	slog.Info("initiating graceful shutdown")
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
